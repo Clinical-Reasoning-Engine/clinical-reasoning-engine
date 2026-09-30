@@ -1,0 +1,41 @@
+# ---------------------------------------------------------------
+# PATIENT DATA — NEVER COMMIT
+# MIMIC-IV data (raw or derived) is covered by the PhysioNet Data
+# Use Agreement and must not be shared. This repo is PUBLIC.
+# Keep all data under data/ locally or in Kaggle, never here.
+# ---------------------------------------------------------------
+data/
+**/data/
+*.csv
+*.csv.gz
+*.parquet
+*.sqlite
+*.sqlite3
+*.db
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+
+# Node / Next.js (web/ has its own .gitignore too)
+node_modules/
+.next/
+.vercel/
+
+# Python (engine/)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
