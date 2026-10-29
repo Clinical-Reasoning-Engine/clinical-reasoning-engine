@@ -20,6 +20,12 @@ web/      Next.js app (deployed on Vercel)
 engine/   Python trajectory-matching code
 ```
 
+## Sepsis proof of concept
+
+Open `/case/sepsis` in the web app: one guided sepsis case whose vitals follow real ICU
+trajectories from the open-access MIMIC-IV demo, matched offline by the engine. The patient
+story and replies are written by the team. See `engine/README.md` and `web/src/demo-case/README.md`.
+
 ## Running the web app
 
 ```bash
@@ -42,4 +48,4 @@ npm run build
 - `main` is protected. All changes go through a pull request.
 - A PR can merge only when CI passes and one teammate approves.
 - Every PR gets a Vercel preview link. Merging to `main` deploys to production.
-- **Never commit patient data or secrets.** MIMIC data is covered by a Data Use Agreement, and this repo is public. API keys go in Vercel environment variables.
+- **Never commit patient data or secrets.** Credentialed MIMIC data is covered by a Data Use Agreement, and this repo is public. The only exception is the small open-access demo extract in `web/src/demo-case/` (ODbL). API keys go in Vercel environment variables.
