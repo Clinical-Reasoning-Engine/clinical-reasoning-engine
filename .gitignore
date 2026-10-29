@@ -3,6 +3,8 @@
 # MIMIC-IV data (raw or derived) is covered by the PhysioNet Data
 # Use Agreement and must not be shared. This repo is PUBLIC.
 # Keep all data under data/ locally or in Kaggle, never here.
+# The one exception: web/src/demo-case/ holds a small JSON derived
+# from the OPEN-ACCESS MIMIC-IV demo (ODbL), with its license.
 # ---------------------------------------------------------------
 data/
 **/data/
