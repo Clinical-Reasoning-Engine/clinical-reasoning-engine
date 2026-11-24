@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { sepsisDiagnoseCase } from "../../demo-case/diagnose-sepsis";
 
-import { askPatient, coverage, normalize, OFF_TOPIC_REPLIES, termMatches } from "./history";
+import { askPatient, coverage, normalize, OFF_TOPIC_REPLIES, termMatches, trackerView } from "./history";
 
 const items = sepsisDiagnoseCase.history;
 const matchId = (q: string) => {
@@ -80,5 +80,23 @@ describe("coverage", () => {
     expect(flat.find((i) => i.id === "onset")?.asked).toBe(true);
     expect(flat.find((i) => i.id === "meds")?.asked).toBe(false);
     expect(flat.some((i) => i.id === "greeting")).toBe(false);
+  });
+});
+
+describe("trackerView", () => {
+  it("shows only covered topics by default, so it can't be used as a cheat sheet", () => {
+    const groups = trackerView(items, ["onset", "smoking"], false);
+    const shown = groups.flatMap((g) => g.items.map((i) => i.id));
+    expect(shown.sort()).toEqual(["onset", "smoking"]);
+    expect(groups.find((g) => g.category === "family")?.items).toEqual([]);
+  });
+
+  it("shows the full checklist in practice mode", () => {
+    const shown = trackerView(items, ["onset"], true).flatMap((g) => g.items);
+    expect(shown.length).toBe(items.filter((i) => i.category !== "intro").length);
+  });
+
+  it("uses labels that don't give the answer away", () => {
+    for (const i of items) expect(i.label).not.toMatch(/\(/);
   });
 });

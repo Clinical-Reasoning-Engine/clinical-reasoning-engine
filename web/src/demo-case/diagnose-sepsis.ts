@@ -52,7 +52,7 @@ const history: HistoryItem[] = [
   {
     id: "quality",
     category: "hpi",
-    label: "Quality (cough, sputum)",
+    label: "Quality",
     terms: ["cough*", "phlegm", "sputum", "mucus", "productive"],
     answer: "It's a wet cough… I'm bringing up thick yellow stuff.",
     speaker: "Patient",
@@ -62,7 +62,7 @@ const history: HistoryItem[] = [
   {
     id: "region",
     category: "hpi",
-    label: "Region (chest pain)",
+    label: "Region",
     terms: ["chest pain", "pain*", "hurt*", "radiat*", "sore"],
     answer: "My right side hurts when I cough or take a deep breath.",
     speaker: "Patient",

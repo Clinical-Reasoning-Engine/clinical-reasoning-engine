@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { askedItemIds, canSubmit, emptyAttempt, offTopicCount, orderTest, parseAttempt } from "./attempt";
+import { askedItemIds, canSubmit, emptyAttempt, offTopicCount, orderTest, parseAttempt, setPracticeMode } from "./attempt";
 
 describe("attempt helpers", () => {
   const a = {
@@ -38,5 +38,20 @@ describe("parseAttempt", () => {
   it("restores a saved attempt", () => {
     const saved = { ...emptyAttempt("sepsis"), testsOrdered: ["cbc"] };
     expect(parseAttempt(JSON.stringify(saved), "sepsis").testsOrdered).toEqual(["cbc"]);
+  });
+});
+
+describe("practice mode", () => {
+  it("is off by default and remembers that it was used, even after turning it off", () => {
+    const start = emptyAttempt("sepsis");
+    expect(start.practiceMode).toBe(false);
+    const off = setPracticeMode(setPracticeMode(start, true), false);
+    expect(off.practiceMode).toBe(false);
+    expect(off.usedPracticeMode).toBe(true);
+  });
+
+  it("restores old saved attempts without the flags as practice mode off", () => {
+    const old = JSON.stringify({ caseId: "sepsis", asked: [], testsOrdered: [], submission: null });
+    expect(parseAttempt(old, "sepsis").usedPracticeMode).toBe(false);
   });
 });

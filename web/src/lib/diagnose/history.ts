@@ -87,6 +87,16 @@ export type CategoryCoverage = {
   items: { id: string; label: string; asked: boolean }[];
 };
 
+/**
+ * What the tracker shows. Normally only topics already covered, so it can't be
+ * used as a cheat sheet; in practice mode every topic, as a checklist.
+ */
+export function trackerView(items: HistoryItem[], askedIds: Iterable<string>, practiceMode: boolean): CategoryCoverage[] {
+  const groups = coverage(items, askedIds);
+  if (practiceMode) return groups;
+  return groups.map((g) => ({ ...g, items: g.items.filter((i) => i.asked) }));
+}
+
 /** For the tracker: every tracked item, grouped by category, and whether it has been asked. */
 export function coverage(items: HistoryItem[], askedIds: Iterable<string>): CategoryCoverage[] {
   const asked = new Set(askedIds);

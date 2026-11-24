@@ -23,10 +23,14 @@ export type Attempt = {
   asked: AskedQuestion[];
   testsOrdered: string[];
   submission: Submission | null;
+  /** Practice mode shows the full history checklist (hints). */
+  practiceMode: boolean;
+  /** True once practice mode was turned on in this attempt, even if turned off again. Results notes it. */
+  usedPracticeMode: boolean;
 };
 
 export function emptyAttempt(caseId: string): Attempt {
-  return { caseId, asked: [], testsOrdered: [], submission: null };
+  return { caseId, asked: [], testsOrdered: [], submission: null, practiceMode: false, usedPracticeMode: false };
 }
 
 /** Ids of the history items the student has covered so far. */
@@ -45,6 +49,11 @@ export function orderTest(attempt: Attempt, testId: string): Attempt {
   return { ...attempt, testsOrdered: [...attempt.testsOrdered, testId] };
 }
 
+/** Turns practice mode on or off. Turning it on is remembered for Results. */
+export function setPracticeMode(attempt: Attempt, on: boolean): Attempt {
+  return { ...attempt, practiceMode: on, usedPracticeMode: attempt.usedPracticeMode || on };
+}
+
 /** True when all three differentials are filled in. */
 export function canSubmit(differentials: string[]): boolean {
   return differentials.length === 3 && differentials.every((d) => d.trim().length > 0);
@@ -61,7 +70,14 @@ export function parseAttempt(raw: string | null, caseId: string): Attempt {
     if (value.caseId !== caseId || !Array.isArray(value.asked) || !Array.isArray(value.testsOrdered)) {
       return emptyAttempt(caseId);
     }
-    return { caseId, asked: value.asked, testsOrdered: value.testsOrdered, submission: value.submission ?? null };
+    return {
+      caseId,
+      asked: value.asked,
+      testsOrdered: value.testsOrdered,
+      submission: value.submission ?? null,
+      practiceMode: value.practiceMode === true,
+      usedPracticeMode: value.usedPracticeMode === true,
+    };
   } catch {
     return emptyAttempt(caseId);
   }
