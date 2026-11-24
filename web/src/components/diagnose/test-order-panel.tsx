@@ -1,13 +1,12 @@
 "use client";
 
-// Order tests and see results (MVP-5). Results that are in the real record are
-// labelled as such; the rest are written by the team.
+// Order tests and see results (MVP-5). Which results come from the real record
+// is shown on the Results page, after the case.
 
 import { orderTest } from "@/lib/diagnose/attempt";
 import type { TestItem } from "@/lib/diagnose/case-types";
 
 import { useAttempt } from "./attempt-provider";
-import { SourceTag } from "./source-tag";
 
 export function TestOrderPanel({ tests, locked }: { tests: TestItem[]; locked: boolean }) {
   const { attempt, update } = useAttempt();
@@ -43,10 +42,7 @@ export function TestOrderPanel({ tests, locked }: { tests: TestItem[]; locked: b
                 </button>
               </div>
               {ordered && (
-                <div className="flex flex-col gap-1 rounded-lg bg-black p-2">
-                  <p className="font-mono text-sm text-zinc-100">{t.result}</p>
-                  <SourceTag source={t.source} />
-                </div>
+                <p className="rounded-lg bg-black p-2 font-mono text-sm text-zinc-100">{t.result}</p>
               )}
             </li>
           );

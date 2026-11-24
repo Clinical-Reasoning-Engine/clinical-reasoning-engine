@@ -1,11 +1,10 @@
 // Step 1 of the case: meet the patient. The story on the left, the opening
-// vitals on the right, each labelled with where it came from. Deliberately no
-// diagnosis hints: the student works that out in the work-up.
+// vitals on the right. One plain note says which parts are real; the Results
+// page shows sources item by item. Deliberately no diagnosis hints.
 
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { SourceTag } from "@/components/diagnose/source-tag";
 import { VitalsPanel } from "@/components/diagnose/vitals-panel";
 import { getDiagnoseCase } from "@/lib/diagnose/cases";
 import { stepHref } from "@/lib/diagnose/steps";
@@ -24,15 +23,11 @@ export default async function DiagnoseIntroPage({ params }: PageProps<"/diagnose
           <blockquote className="border-l-2 border-teal-500 pl-4 text-2xl leading-snug text-zinc-50">
             {chiefComplaint.text}
           </blockquote>
-          <div>
-            <SourceTag source={chiefComplaint.source} />
-          </div>
         </div>
         <div className="flex flex-col gap-2 text-zinc-300">
           <p>{setting.text}</p>
-          <p className="flex flex-wrap items-center gap-2 text-sm text-zinc-400">
+          <p className="text-sm text-zinc-400">
             Patient: {patient.age}-year-old {patient.sex === "F" ? "woman" : "man"}
-            <SourceTag source={patient.source} />
           </p>
         </div>
         <div className="flex flex-col gap-2 pt-2">
@@ -47,13 +42,15 @@ export default async function DiagnoseIntroPage({ params }: PageProps<"/diagnose
             is in the header whenever you need it.
           </p>
         </div>
+        <p className="border-t border-zinc-800 pt-4 text-xs leading-relaxed text-zinc-500">
+          About this case: the age, sex, vitals and lab values come from a real, de-identified hospital stay (MIMIC-IV
+          demo). The history, chart and some test results were written by our team for teaching. Your results page shows
+          which is which.
+        </p>
       </section>
 
       <section className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold text-zinc-100">Opening vitals</h2>
-          <SourceTag source={openingVitals.source} />
-        </div>
+        <h2 className="font-semibold text-zinc-100">Opening vitals</h2>
         <VitalsPanel values={openingVitals.values} />
         <p className="text-xs text-zinc-500">{openingVitals.note}</p>
       </section>

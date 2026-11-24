@@ -9,8 +9,6 @@ import { useRef } from "react";
 
 import type { PatientChart } from "@/lib/diagnose/case-types";
 
-import { SourceTag } from "./source-tag";
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
@@ -63,9 +61,6 @@ export function ChartDialog({ chart, patientLine }: { chart: VisibleChart; patie
               </h2>
               <p className="text-sm text-zinc-400">{patientLine}</p>
               <p className="text-xs text-zinc-500">Last updated {chart.lastUpdated}</p>
-              <div>
-                <SourceTag source={chart.source} />
-              </div>
             </div>
             <button
               onClick={() => dialog.current?.close()}
