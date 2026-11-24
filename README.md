@@ -34,6 +34,23 @@ npm install
 npm run dev        # http://localhost:3000
 ```
 
+### Diagnose mode and Google sign-in
+
+`/diagnose/sepsis` is the Diagnose-mode flow (Login → Patient → Work-up → Feedback → Grade).
+Sign-in uses Firebase Auth with Google. It needs four public web-app values, set in Vercel
+(Settings → Environment Variables, then redeploy) or in `web/.env.local` on your machine:
+
+```bash
+NEXT_PUBLIC_FIREBASE_API_KEY=...
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=<project-id>.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=<project-id>
+NEXT_PUBLIC_FIREBASE_APP_ID=...
+```
+
+Without them, the Login page offers "Continue as guest", so CI and fresh clones still work.
+Every domain you sign in from (localhost, the Vercel production URL, a preview branch URL)
+must be listed in Firebase → Authentication → Settings → Authorized domains.
+
 Before opening a pull request, run the same checks CI runs:
 
 ```bash

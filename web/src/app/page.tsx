@@ -10,12 +10,20 @@ export default function Home() {
           Practice real-time clinical decisions on a virtual patient whose vitals follow real ICU data.
         </p>
       </div>
-      <Link
-        href="/case/sepsis"
-        className="rounded-xl bg-teal-500 px-6 py-3 text-lg font-semibold text-zinc-950 hover:bg-teal-400"
-      >
-        Start the sepsis case
-      </Link>
+      <div className="flex flex-wrap justify-center gap-3">
+        <Link
+          href="/diagnose/sepsis"
+          className="rounded-xl bg-teal-500 px-6 py-3 text-lg font-semibold text-zinc-950 hover:bg-teal-400"
+        >
+          Diagnose mode: sepsis case
+        </Link>
+        <Link
+          href="/case/sepsis"
+          className="rounded-xl border border-zinc-600 px-6 py-3 text-lg font-semibold text-zinc-100 hover:border-zinc-400"
+        >
+          Manage mode: sepsis POC
+        </Link>
+      </div>
       <p className="max-w-xl text-xs text-zinc-500">
         Educational simulation, not medical advice. Built on the open-access MIMIC-IV Clinical Database Demo (ODbL).
       </p>
