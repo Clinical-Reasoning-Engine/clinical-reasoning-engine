@@ -1,4 +1,4 @@
-// Firebase setup for Google sign-in. Runs in the browser only.
+// Firebase setup for Google sign-in and saved attempts (Firestore). Runs in the browser only.
 //
 // The values come from NEXT_PUBLIC_FIREBASE_* environment variables (Vercel →
 // Settings → Environment Variables, or web/.env.local on your machine). Next.js
@@ -10,6 +10,7 @@
 
 import { getApp, getApps, initializeApp } from "firebase/app";
 import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 import { readFirebaseConfig } from "./auth-utils";
 
@@ -23,9 +24,19 @@ export const firebaseConfig = readFirebaseConfig({
 /** True when this deployment has Firebase set up. */
 export const firebaseReady = firebaseConfig !== null;
 
+function firebaseApp() {
+  if (!firebaseConfig) return null;
+  return getApps().length ? getApp() : initializeApp(firebaseConfig);
+}
+
 /** The Firebase Auth instance, created on first use. Null when Firebase isn't set up. */
 export function firebaseAuth(): Auth | null {
-  if (!firebaseConfig) return null;
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  return getAuth(app);
+  const app = firebaseApp();
+  return app ? getAuth(app) : null;
+}
+
+/** The Firestore database (saved attempts). Null when Firebase isn't set up. */
+export function firebaseDb(): Firestore | null {
+  const app = firebaseApp();
+  return app ? getFirestore(app) : null;
 }

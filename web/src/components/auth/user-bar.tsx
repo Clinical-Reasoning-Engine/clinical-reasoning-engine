@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "./auth-provider";
@@ -11,6 +12,11 @@ export function UserBar() {
 
   return (
     <div className="flex items-center gap-3 text-sm text-zinc-400">
+      {student.mode === "google" && (
+        <Link href="/attempts" className="whitespace-nowrap hover:text-zinc-200">
+          My attempts
+        </Link>
+      )}
       <span className="hidden sm:inline">{student.mode === "guest" ? "Guest (nothing is saved)" : `Signed in as ${student.name}`}</span>
       <button
         onClick={async () => {

@@ -2,13 +2,17 @@
 
 // Step 3 of the case: the score, then feedback that teaches. The attempt lives
 // in this browser (sessionStorage), so we send it to the server to be graded
-// (actions.ts) and show what comes back.
+// (actions.ts) and show what comes back. Signed-in students then get a summary
+// saved to their account (My attempts); guests don't.
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 
+import { useAuth } from "@/components/auth/auth-provider";
 import { useAttempt } from "@/components/diagnose/attempt-provider";
+import { saveAttemptRecord } from "@/lib/attempt-store";
+import { buildAttemptRecord } from "@/lib/diagnose/attempt-history";
 import { SOURCE_LABELS, type Source } from "@/lib/diagnose/case-types";
 import type { GradeResult, SlotVerdict } from "@/lib/diagnose/grade";
 import { stepHref } from "@/lib/diagnose/steps";
@@ -35,8 +39,13 @@ function useInBrowser() {
   return useSyncExternalStore(subscribeNothing, () => true, () => false);
 }
 
-export function ResultsView({ caseId }: { caseId: string }) {
+type SaveStatus = "saving" | "saved" | "failed" | "guest";
+
+export function ResultsView({ caseId, caseTitle }: { caseId: string; caseTitle: string }) {
   const { attempt, reset } = useAttempt();
+  const { student } = useAuth();
+  const uid = student?.uid ?? null;
+  const [saved, setSaved] = useState<{ for: string; ok: boolean } | null>(null);
   const router = useRouter();
   const inBrowser = useInBrowser();
   const [response, setResponse] = useState<{ for: string; value: GradeResponse } | null>(null);
@@ -52,6 +61,30 @@ export function ResultsView({ caseId }: { caseId: string }) {
       cancelled = true;
     };
   }, [inBrowser, caseId, attempt, submittedAt]);
+
+  // Once graded, save a summary to the signed-in student's account.
+  const graded = response && response.for === submittedAt && response.value.ok ? response.value.result : null;
+  useEffect(() => {
+    if (!graded || !uid || !submittedAt) return;
+    let cancelled = false;
+    saveAttemptRecord(uid, buildAttemptRecord(graded, attempt, caseTitle)).then(
+      () => !cancelled && setSaved({ for: submittedAt, ok: true }),
+      (error) => {
+        console.error("Couldn't save the attempt", error);
+        if (!cancelled) setSaved({ for: submittedAt, ok: false });
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [graded, uid, submittedAt, attempt, caseTitle]);
+  const saveStatus: SaveStatus = !uid
+    ? "guest"
+    : saved?.for !== submittedAt
+      ? "saving"
+      : saved.ok
+        ? "saved"
+        : "failed";
 
   function tryAgain() {
     if (!window.confirm("Start this case again? These results will be cleared.")) return;
@@ -73,7 +106,7 @@ export function ResultsView({ caseId }: { caseId: string }) {
   if (!response || response.for !== submittedAt) return <Status>Grading your work-up…</Status>;
   if (!response.value.ok) return <Status>We couldn&apos;t grade this attempt. Try the case again.</Status>;
 
-  return <Results result={response.value.result} caseId={caseId} onTryAgain={tryAgain} />;
+  return <Results result={response.value.result} caseId={caseId} saveStatus={saveStatus} onTryAgain={tryAgain} />;
 }
 
 function Status({ children }: { children: ReactNode }) {
@@ -84,7 +117,17 @@ function Status({ children }: { children: ReactNode }) {
   );
 }
 
-function Results({ result, caseId, onTryAgain }: { result: GradeResult; caseId: string; onTryAgain: () => void }) {
+function Results({
+  result,
+  caseId,
+  saveStatus,
+  onTryAgain,
+}: {
+  result: GradeResult;
+  caseId: string;
+  saveStatus: SaveStatus;
+  onTryAgain: () => void;
+}) {
   const { differentials, history, plan, chartChecks } = result;
   const first = differentials.slots[0];
   const headline =
@@ -134,6 +177,8 @@ function Results({ result, caseId, onTryAgain }: { result: GradeResult; caseId: 
           </Link>
         </div>
       </section>
+
+      <SaveNote status={saveStatus} />
 
       {result.usedPracticeMode && (
         <p className="rounded-xl border border-amber-800/70 bg-amber-950/40 p-3 text-sm text-amber-200">
@@ -262,6 +307,28 @@ function Results({ result, caseId, onTryAgain }: { result: GradeResult; caseId: 
         </ul>
       </Card>
     </div>
+  );
+}
+
+function SaveNote({ status }: { status: SaveStatus }) {
+  const text: Record<SaveStatus, ReactNode> = {
+    saving: "Saving to your attempts…",
+    saved: (
+      <>
+        Saved to{" "}
+        <Link href="/attempts" className="text-teal-300 underline">
+          My attempts
+        </Link>
+        .
+      </>
+    ),
+    failed: "We couldn't save this attempt to your account. Your results are still here.",
+    guest: "Guest mode: this attempt isn't saved. Sign in with Google to keep a history of your attempts.",
+  };
+  return (
+    <p role="status" className="-mt-3 text-sm text-zinc-500">
+      {text[status]}
+    </p>
   );
 }
 

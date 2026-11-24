@@ -4,8 +4,8 @@
 // moves between the Work-up and Results pages.
 //
 // It is saved in sessionStorage, so a page refresh keeps your progress but
-// closing the tab starts fresh. Nothing is sent to a server yet; saving past
-// attempts to your account (Firestore) is MVP-12.
+// closing the tab starts fresh. The full attempt stays in this browser; after
+// grading, only a summary is saved to the student's account (lib/attempt-store.ts).
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
@@ -22,6 +22,15 @@ type AttemptContextValue = {
 const AttemptContext = createContext<AttemptContextValue | null>(null);
 
 const storageKey = (caseId: string) => `cre:attempt:${caseId}`;
+
+/** Clears the saved attempt for a case, for starting it fresh from outside the case (My attempts). */
+export function clearSavedAttempt(caseId: string) {
+  try {
+    window.sessionStorage.removeItem(storageKey(caseId));
+  } catch {
+    // Storage blocked: there was nothing saved anyway.
+  }
+}
 
 function load(caseId: string): Attempt {
   if (typeof window === "undefined") return emptyAttempt(caseId);

@@ -8,8 +8,8 @@
 //   student can continue as a guest. Guest mode is remembered for this browser
 //   tab (sessionStorage), so a refresh keeps you in; closing the tab ends it.
 //
-// We keep only a first name for the header. Nothing about the student is stored
-// by us or sent anywhere else.
+// We keep only a first name (for the header) and the Firebase user id (to save
+// attempts under it in Firestore). We don't store the email or anything else.
 
 import { onAuthStateChanged, signOut as firebaseSignOut, GoogleAuthProvider, signInWithPopup, type User } from "firebase/auth";
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
@@ -17,7 +17,12 @@ import { createContext, useContext, useEffect, useState, useSyncExternalStore, t
 import { firstName } from "@/lib/auth-utils";
 import { firebaseAuth, firebaseReady } from "@/lib/firebase";
 
-export type Student = { name: string; mode: "google" | "guest" };
+export type Student = {
+  name: string;
+  mode: "google" | "guest";
+  /** Firebase user id, used to save attempts under this student. Null for guests. */
+  uid: string | null;
+};
 export type AuthStatus = "loading" | "signed-in" | "signed-out";
 
 type AuthContextValue = {
@@ -81,10 +86,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   let student: Student | null = null;
   if (firebaseReady) {
     status = googleUser === undefined ? "loading" : googleUser ? "signed-in" : "signed-out";
-    if (googleUser) student = { name: firstName(googleUser.displayName), mode: "google" };
+    if (googleUser) student = { name: firstName(googleUser.displayName), mode: "google", uid: googleUser.uid };
   } else {
     status = guest === null ? "loading" : guest ? "signed-in" : "signed-out";
-    if (guest) student = { name: "Guest", mode: "guest" };
+    if (guest) student = { name: "Guest", mode: "guest", uid: null };
   }
 
   const value: AuthContextValue = {
