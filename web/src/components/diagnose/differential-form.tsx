@@ -46,11 +46,11 @@ export function DifferentialForm({
         submittedAt: new Date().toISOString(),
       },
     }));
-    router.push(stepHref(caseId, "feedback"));
+    router.push(stepHref(caseId, "results"));
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-5">
+    <form onSubmit={submit} className="grid items-start gap-5 lg:grid-cols-2">
       <datalist id="diagnosis-options">
         {diagnoses.map((d) => (
           <option key={d.id} value={d.label} />
@@ -112,13 +112,14 @@ export function DifferentialForm({
         </label>
       </fieldset>
 
+      <div className="lg:col-span-2">
       {locked ? (
         <button
           type="button"
-          onClick={() => router.push(stepHref(caseId, "feedback"))}
+          onClick={() => router.push(stepHref(caseId, "results"))}
           className="self-start rounded-xl bg-teal-500 px-5 py-3 font-semibold text-zinc-950 hover:bg-teal-400"
         >
-          See feedback
+          See results
         </button>
       ) : (
         <div className="flex flex-col gap-2">
@@ -127,11 +128,12 @@ export function DifferentialForm({
             disabled={!canSubmit(differentials)}
             className="self-start rounded-xl bg-teal-500 px-5 py-3 font-semibold text-zinc-950 hover:bg-teal-400 disabled:opacity-40"
           >
-            Submit for feedback
+            Submit and see results
           </button>
           <p className="text-xs text-zinc-500">Fill in all three differentials to submit. You can&apos;t change answers afterwards.</p>
         </div>
       )}
+      </div>
     </form>
   );
 }

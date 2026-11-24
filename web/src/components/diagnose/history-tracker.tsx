@@ -14,7 +14,7 @@ export function HistoryTracker({ history }: { history: HistoryItem[] }) {
   const groups = coverage(history, askedItemIds(attempt));
 
   return (
-    <aside className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
+    <aside className="flex flex-col gap-4 rounded-2xl border border-zinc-800 bg-zinc-900/60 p-4">
       <h2 className="text-sm font-semibold text-zinc-200">History tracker</h2>
       {groups.map((g) => {
         const done = g.items.filter((i) => i.asked).length;

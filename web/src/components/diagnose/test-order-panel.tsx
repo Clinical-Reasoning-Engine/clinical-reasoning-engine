@@ -18,7 +18,7 @@ export function TestOrderPanel({ tests, locked }: { tests: TestItem[]; locked: b
         Order what you would want for this patient. Everything you order becomes your work-up plan, so choose with
         purpose.
       </p>
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {tests.map((t) => {
           const ordered = attempt.testsOrdered.includes(t.id);
           return (

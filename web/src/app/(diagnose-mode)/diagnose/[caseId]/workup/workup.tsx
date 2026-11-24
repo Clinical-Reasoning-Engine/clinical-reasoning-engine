@@ -31,17 +31,30 @@ export function Workup({
   const locked = attempt.submission !== null;
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: "history", label: "1 · History" },
-    { id: "tests", label: `2 · Tests (${attempt.testsOrdered.length})` },
-    { id: "submit", label: "3 · Submit" },
+    { id: "history", label: "History" },
+    { id: "tests", label: attempt.testsOrdered.length ? `Tests (${attempt.testsOrdered.length})` : "Tests" },
+    { id: "submit", label: "Diagnosis & plan" },
   ];
 
   return (
-    <div className="flex flex-col gap-5">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs uppercase tracking-widest text-teal-300">Work-up</p>
-          <h1 className="text-3xl font-semibold text-zinc-50">{title}</h1>
+    <div className="flex flex-col gap-4">
+      <h1 className="sr-only">Work-up: {title}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div role="tablist" aria-label="Work-up steps" className="flex gap-1 rounded-xl bg-zinc-900 p-1">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={
+                "rounded-lg px-4 py-1.5 text-sm " +
+                (tab === t.id ? "bg-zinc-800 font-semibold text-zinc-50" : "text-zinc-400 hover:text-zinc-200")
+              }
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
         {(attempt.asked.length > 0 || attempt.testsOrdered.length > 0 || locked) && (
           <button
@@ -53,7 +66,7 @@ export function Workup({
             Start over
           </button>
         )}
-      </header>
+      </div>
 
       {locked && (
         <p className="rounded-xl border border-teal-800 bg-teal-950/50 p-3 text-sm text-teal-200">
@@ -61,25 +74,8 @@ export function Workup({
         </p>
       )}
 
-      <div role="tablist" aria-label="Work-up steps" className="flex gap-2">
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={
-              "rounded-full border px-4 py-1.5 text-sm " +
-              (tab === t.id ? "border-teal-400 bg-teal-950 text-teal-200" : "border-zinc-700 text-zinc-400 hover:border-zinc-500")
-            }
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
       {tab === "history" && (
-        <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <HistoryChat history={history} locked={locked} />
           <HistoryTracker history={history} />
         </div>

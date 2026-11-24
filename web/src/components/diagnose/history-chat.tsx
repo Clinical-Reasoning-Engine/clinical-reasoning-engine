@@ -37,7 +37,7 @@ export function HistoryChat({ history, locked }: { history: HistoryItem[]; locke
         ref={(el) => {
           if (el) el.scrollTop = el.scrollHeight;
         }}
-        className="flex h-80 flex-col gap-3 overflow-y-auto rounded-xl bg-black p-3 text-sm"
+        className="flex h-[calc(100dvh-24rem)] min-h-72 flex-col gap-3 overflow-y-auto rounded-xl bg-black p-4 text-[15px] leading-relaxed"
         aria-live="polite"
       >
         {attempt.asked.length === 0 && (

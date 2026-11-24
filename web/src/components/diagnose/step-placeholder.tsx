@@ -16,7 +16,7 @@ export function StepPlaceholder({
 }) {
   return (
     <section className="flex flex-col gap-4 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900 p-6">
-      <p className="text-xs uppercase tracking-widest text-zinc-500">Placeholder · built in a later step</p>
+      <p className="text-sm text-zinc-500">Coming in the next step of the build</p>
       <h1 className="text-2xl font-semibold text-zinc-50">{title}</h1>
       <p className="text-zinc-300">{description}</p>
       <Link

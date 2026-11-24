@@ -5,14 +5,14 @@ import { classifyVital, type VitalStatus } from "../vitals";
 
 import type { VitalKey } from "./case-types";
 
-export type VitalDisplay = { key: VitalKey; label: string; unit: string; normal: [number, number] };
+export type VitalDisplay = { key: VitalKey; label: string; short: string; unit: string; normal: [number, number] };
 
 export const VITAL_DISPLAY: VitalDisplay[] = [
-  { key: "hr", label: "Heart rate", unit: "bpm", normal: [60, 100] },
-  { key: "map", label: "Mean arterial pressure", unit: "mmHg", normal: [65, 110] },
-  { key: "rr", label: "Respiratory rate", unit: "/min", normal: [12, 20] },
-  { key: "spo2", label: "SpO₂", unit: "%", normal: [94, 100] },
-  { key: "temp_f", label: "Temperature", unit: "°F", normal: [97, 100.4] },
+  { key: "hr", label: "Heart rate", short: "HR", unit: "bpm", normal: [60, 100] },
+  { key: "map", label: "Mean arterial pressure", short: "MAP", unit: "mmHg", normal: [65, 110] },
+  { key: "rr", label: "Respiratory rate", short: "RR", unit: "/min", normal: [12, 20] },
+  { key: "spo2", label: "Oxygen saturation", short: "SpO₂", unit: "%", normal: [94, 100] },
+  { key: "temp_f", label: "Temperature", short: "Temp", unit: "°F", normal: [97, 100.4] },
 ];
 
 /** Value as shown on screen: temperature keeps one decimal, the rest are whole numbers. */

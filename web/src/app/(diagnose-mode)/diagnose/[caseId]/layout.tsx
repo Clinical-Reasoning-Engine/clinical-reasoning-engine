@@ -1,5 +1,6 @@
-// Frame for every page of one Diagnose-mode case: sign-in check, user bar,
-// step bar and the not-medical-advice footer.
+// Frame for every page of one Diagnose-mode case: sign-in check, a pinned
+// header (app name, chart, user, patient banner, progress) and the
+// not-medical-advice footer.
 
 import Link from "next/link";
 
@@ -8,6 +9,7 @@ import { UserBar } from "@/components/auth/user-bar";
 import { AttemptProvider } from "@/components/diagnose/attempt-provider";
 import { ChartDialog } from "@/components/diagnose/chart-dialog";
 import { Disclaimer } from "@/components/diagnose/disclaimer";
+import { PatientBanner } from "@/components/diagnose/patient-banner";
 import { StepNav } from "@/components/diagnose/step-nav";
 import { chartForStudent, getDiagnoseCase } from "@/lib/diagnose/cases";
 import { DIAGNOSE_CASE_IDS } from "@/lib/diagnose/steps";
@@ -20,29 +22,36 @@ export const dynamicParams = false;
 
 export default async function DiagnoseCaseLayout({ children, params }: LayoutProps<"/diagnose/[caseId]">) {
   const { caseId } = await params;
-  const diagnoseCase = getDiagnoseCase(caseId);
-  // The chart goes to the browser without its list of deliberate gaps (answer key).
-  const visibleChart = diagnoseCase ? chartForStudent(diagnoseCase.chart) : null;
-  const patientLine = diagnoseCase
-    ? `${diagnoseCase.patient.age}-year-old ${diagnoseCase.patient.sex === "F" ? "woman" : "man"} · de-identified`
-    : "";
+  // dynamicParams = false means only known ids reach this layout.
+  const diagnoseCase = getDiagnoseCase(caseId)!;
+  const { patient, title, openingVitals } = diagnoseCase;
+  const patientLine = `${patient.age}-year-old ${patient.sex === "F" ? "woman" : "man"}`;
 
   return (
     <>
       <RequireAuth>
-        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col gap-6 p-4">
-          <header className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <Link href="/" className="text-xs uppercase tracking-widest text-teal-300">
-                Clinical Reasoning Engine · Diagnose mode
+        {/* Pinned on tablets and up; on phones it would cover too much of the screen. */}
+        <header className="z-30 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur md:sticky md:top-0">
+          <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
+            <div className="flex h-12 items-center justify-between gap-4">
+              <Link href="/" className="truncate text-sm font-semibold text-zinc-200 hover:text-white">
+                Clinical Reasoning Engine
               </Link>
-              <UserBar />
+              <div className="flex shrink-0 items-center gap-3">
+                {/* The chart goes to the browser without its deliberate gaps (answer key). */}
+                <ChartDialog chart={chartForStudent(diagnoseCase.chart)} patientLine={`${patientLine} · de-identified`} />
+                <UserBar />
+              </div>
             </div>
-            <StepNav caseId={caseId} />
-          </header>
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 pb-3">
+              <PatientBanner patientLine={patientLine} title={title} vitals={openingVitals.values} />
+              <StepNav caseId={caseId} />
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
           <AttemptProvider caseId={caseId}>{children}</AttemptProvider>
-        </div>
-        {visibleChart && <ChartDialog chart={visibleChart} patientLine={patientLine} />}
+        </main>
       </RequireAuth>
       <Disclaimer />
     </>

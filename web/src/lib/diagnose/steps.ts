@@ -8,8 +8,7 @@ export type DiagnoseCaseId = (typeof DIAGNOSE_CASE_IDS)[number];
 export const DIAGNOSE_STEPS = [
   { id: "intro", label: "Patient", segment: "" },
   { id: "workup", label: "Work-up", segment: "/workup" },
-  { id: "feedback", label: "Feedback", segment: "/feedback" },
-  { id: "grade", label: "Grade", segment: "/grade" },
+  { id: "results", label: "Results", segment: "/results" },
 ] as const;
 export type DiagnoseStepId = (typeof DIAGNOSE_STEPS)[number]["id"];
 

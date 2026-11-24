@@ -1,8 +1,8 @@
 "use client";
 
-// The patient's chart as a pop-up (MVP-2). A floating "Chart" button stays on
-// screen on every step of the case, so the student can check it any time
-// without losing their place. Uses the browser's <dialog>, which handles
+// The patient's chart as a pop-up (MVP-2). The "Chart" button sits in the
+// pinned header on every step of the case, so the student can check it any
+// time without losing their place. Uses the browser's <dialog>, which handles
 // focus and closes with Esc.
 
 import { useRef } from "react";
@@ -40,10 +40,10 @@ export function ChartDialog({ chart, patientLine }: { chart: VisibleChart; patie
     <>
       <button
         onClick={() => dialog.current?.showModal()}
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full border border-teal-700 bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-teal-200 shadow-lg shadow-black/50 hover:border-teal-400"
+        className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-teal-700 bg-teal-950/40 px-3 py-1.5 text-sm font-semibold text-teal-200 hover:border-teal-400 hover:bg-teal-950"
         aria-haspopup="dialog"
       >
-        <span aria-hidden="true">📋</span> Chart
+        <span aria-hidden="true">📋</span> Open chart
       </button>
 
       <dialog
