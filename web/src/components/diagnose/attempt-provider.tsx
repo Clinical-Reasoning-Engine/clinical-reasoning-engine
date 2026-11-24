@@ -1,7 +1,7 @@
 "use client";
 
 // Keeps the current attempt (questions, tests, submission) while the student
-// moves between Work-up, Feedback and Grade.
+// moves between the Work-up and Results pages.
 //
 // It is saved in sessionStorage, so a page refresh keeps your progress but
 // closing the tab starts fresh. Nothing is sent to a server yet; saving past

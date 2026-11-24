@@ -49,7 +49,12 @@ export type TestItem = {
   source: Source;
 };
 
-/** A diagnosis the student can choose for the differential. */
+/**
+ * A diagnosis the student can name in the differential. The student types
+ * free text; it matches this option if it is the label, or if it contains every
+ * word of one synonym, in any order ("seps* pneumon*" matches "pneumonia with
+ * sepsis"). A trailing * matches the start of a word, as in history terms.
+ */
 export type DiagnosisOption = { id: string; label: string; synonyms: string[] };
 
 /** What the rule-based grader compares the student's submission against. */
