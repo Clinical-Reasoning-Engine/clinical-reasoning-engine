@@ -2,6 +2,7 @@
 
 // The Work-up step: three tabs (History, Tests, Submit) over one shared attempt.
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { useAttempt } from "@/components/diagnose/attempt-provider";
@@ -10,6 +11,7 @@ import { HistoryChat } from "@/components/diagnose/history-chat";
 import { HistoryTracker } from "@/components/diagnose/history-tracker";
 import { TestOrderPanel } from "@/components/diagnose/test-order-panel";
 import type { DiagnosisOption, HistoryItem, TestItem } from "@/lib/diagnose/case-types";
+import { stepHref } from "@/lib/diagnose/steps";
 
 type Tab = "history" | "tests" | "submit";
 
@@ -27,7 +29,15 @@ export function Workup({
   diagnoses: DiagnosisOption[];
 }) {
   const { attempt, reset } = useAttempt();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("history");
+
+  // Start over = a fresh attempt from the beginning of the case (the Patient page).
+  function startOver() {
+    if (!window.confirm("Start this case over? Your questions, tests and answers will be cleared.")) return;
+    reset();
+    router.push(stepHref(caseId, "intro"));
+  }
   const locked = attempt.submission !== null;
 
   const tabs: { id: Tab; label: string }[] = [
@@ -58,9 +68,7 @@ export function Workup({
         </div>
         {(attempt.asked.length > 0 || attempt.testsOrdered.length > 0 || locked) && (
           <button
-            onClick={() => {
-              if (window.confirm("Start this case over? Your questions, tests and answers will be cleared.")) reset();
-            }}
+            onClick={startOver}
             className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:border-zinc-400"
           >
             Start over
