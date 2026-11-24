@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import caseJson from "../../demo-case/sepsis-case.json";
 
-import { getDiagnoseCase } from "./cases";
+import { chartForStudent, getDiagnoseCase } from "./cases";
 import { DIAGNOSE_CASE_IDS } from "./steps";
 import { VITAL_DISPLAY, formatVital, vitalStatus } from "./vitals-display";
 
@@ -48,5 +48,29 @@ describe("vitals display", () => {
     const map = VITAL_DISPLAY.find((v) => v.key === "map")!;
     expect(vitalStatus(map, 58)).toBe("low");
     expect(vitalStatus(map, 80)).toBe("normal");
+  });
+});
+
+describe("patient chart", () => {
+  const c = getDiagnoseCase("sepsis")!;
+  const historyIds = new Set(c.history.map((h) => h.id));
+
+  it("is labelled as written by the team", () => {
+    expect(c.chart.source).toBe("team");
+  });
+
+  it("links every deliberate gap to a history item that uncovers it", () => {
+    expect(c.chart.gaps.length).toBeGreaterThan(0);
+    for (const gap of c.chart.gaps) expect(historyIds.has(gap.historyItemId)).toBe(true);
+  });
+
+  it("really disagrees with the history on allergies", () => {
+    const allergyAnswer = c.history.find((h) => h.id === "allergies")!.answer.toLowerCase();
+    expect(allergyAnswer).toContain("penicillin");
+    expect(c.chart.allergies.join(" ").toLowerCase()).not.toContain("penicillin");
+  });
+
+  it("never sends the gaps to the browser", () => {
+    expect("gaps" in chartForStudent(c.chart)).toBe(false);
   });
 });

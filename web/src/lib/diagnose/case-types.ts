@@ -68,6 +68,30 @@ export type AnswerKey = {
   teachingPoints: string[];
 };
 
+/**
+ * The patient's chart, as the student would see it before walking in (MVP-2).
+ * Like real charts it can be incomplete or out of date; `gaps` lists what it
+ * gets wrong, so Results can credit students who checked with the patient.
+ */
+export type PatientChart = {
+  source: Source;
+  lastUpdated: string;
+  problems: string[];
+  medications: string[];
+  allergies: string[];
+  immunizations: string[];
+  visits: { when: string; where: string; note: string }[];
+  pastLabs: { when: string; results: string }[];
+  gaps: {
+    id: string;
+    /** What the chart says vs. what is true. */
+    label: string;
+    /** Asking about this history item uncovers the gap. */
+    historyItemId: string;
+    why: string;
+  }[];
+};
+
 export type DiagnoseCase = {
   id: string;
   /** Short title shown on the Patient page, e.g. "Cough, fever and confusion". */
@@ -79,6 +103,7 @@ export type DiagnoseCase = {
   setting: { text: string; source: Source };
   /** First set of vitals the student sees. */
   openingVitals: { values: Record<VitalKey, number>; note: string; source: Source };
+  chart: PatientChart;
   history: HistoryItem[];
   tests: TestItem[];
   diagnoses: DiagnosisOption[];

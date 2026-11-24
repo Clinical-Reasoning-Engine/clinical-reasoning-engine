@@ -311,6 +311,33 @@ export const sepsisDiagnoseCase: DiagnoseCase = {
     note: "First charted hour of the real ICU stay. The extract has mean arterial pressure, not systolic/diastolic.",
     source: "mimic-demo",
   },
+  chart: {
+    source: "team",
+    lastUpdated: "8 months ago",
+    problems: ["Hypertension", "Former smoker (quit many years ago)"],
+    medications: ["Lisinopril 10 mg by mouth, once daily"],
+    allergies: ["No known drug allergies (NKDA)"],
+    immunizations: ["Influenza vaccine: last recorded 2 years ago"],
+    visits: [
+      { when: "8 months ago", where: "Primary care, annual check-up", note: "Feels well. Blood pressure 132/78. No changes to medications." },
+      { when: "2 years ago", where: "Urgent care", note: "Sprained left wrist after a fall at home. Splinted; healed without problems." },
+    ],
+    pastLabs: [{ when: "8 months ago", results: "Basic metabolic panel: sodium 138 mEq/L, potassium 4.1 mEq/L, creatinine 0.8 mg/dL" }],
+    gaps: [
+      {
+        id: "allergy-missing",
+        label: "The chart says no known drug allergies, but she had a rash from penicillin.",
+        historyItemId: "allergies",
+        why: "Charts are often incomplete. Always confirm allergies yourself before choosing an antibiotic.",
+      },
+      {
+        id: "aspirin-missing",
+        label: "The chart lists only lisinopril, but she also takes a daily baby aspirin.",
+        historyItemId: "meds",
+        why: "Medication lists drift out of date. Reconciling them with the patient catches drugs that matter (aspirin affects bleeding risk).",
+      },
+    ],
+  },
   history,
   tests,
   diagnoses: [

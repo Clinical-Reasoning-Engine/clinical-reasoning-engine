@@ -6,8 +6,10 @@ import Link from "next/link";
 import { RequireAuth } from "@/components/auth/require-auth";
 import { UserBar } from "@/components/auth/user-bar";
 import { AttemptProvider } from "@/components/diagnose/attempt-provider";
+import { ChartDialog } from "@/components/diagnose/chart-dialog";
 import { Disclaimer } from "@/components/diagnose/disclaimer";
 import { StepNav } from "@/components/diagnose/step-nav";
+import { chartForStudent, getDiagnoseCase } from "@/lib/diagnose/cases";
 import { DIAGNOSE_CASE_IDS } from "@/lib/diagnose/steps";
 
 // Build one set of pages per known case; any other /diagnose/<id> is a 404.
@@ -18,6 +20,12 @@ export const dynamicParams = false;
 
 export default async function DiagnoseCaseLayout({ children, params }: LayoutProps<"/diagnose/[caseId]">) {
   const { caseId } = await params;
+  const diagnoseCase = getDiagnoseCase(caseId);
+  // The chart goes to the browser without its list of deliberate gaps (answer key).
+  const visibleChart = diagnoseCase ? chartForStudent(diagnoseCase.chart) : null;
+  const patientLine = diagnoseCase
+    ? `${diagnoseCase.patient.age}-year-old ${diagnoseCase.patient.sex === "F" ? "woman" : "man"} · de-identified`
+    : "";
 
   return (
     <>
@@ -34,6 +42,7 @@ export default async function DiagnoseCaseLayout({ children, params }: LayoutPro
           </header>
           <AttemptProvider caseId={caseId}>{children}</AttemptProvider>
         </div>
+        {visibleChart && <ChartDialog chart={visibleChart} patientLine={patientLine} />}
       </RequireAuth>
       <Disclaimer />
     </>
