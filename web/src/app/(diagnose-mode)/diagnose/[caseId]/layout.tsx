@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { UserBar } from "@/components/auth/user-bar";
+import { AttemptProvider } from "@/components/diagnose/attempt-provider";
 import { Disclaimer } from "@/components/diagnose/disclaimer";
 import { StepNav } from "@/components/diagnose/step-nav";
 import { DIAGNOSE_CASE_IDS } from "@/lib/diagnose/steps";
@@ -31,7 +32,7 @@ export default async function DiagnoseCaseLayout({ children, params }: LayoutPro
             </div>
             <StepNav caseId={caseId} />
           </header>
-          {children}
+          <AttemptProvider caseId={caseId}>{children}</AttemptProvider>
         </div>
       </RequireAuth>
       <Disclaimer />

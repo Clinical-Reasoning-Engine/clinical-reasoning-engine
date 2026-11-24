@@ -5,14 +5,14 @@
 // - Firebase set up: Firebase remembers the Google sign-in in the browser and
 //   tells us through onAuthStateChanged. Status is "loading" until it answers.
 // - Firebase not set up (CI, a fresh clone): there is no Google button, and the
-//   student can continue as a guest. Guest mode lives only in memory, so a full
-//   page reload goes back to the Login page.
+//   student can continue as a guest. Guest mode is remembered for this browser
+//   tab (sessionStorage), so a refresh keeps you in; closing the tab ends it.
 //
 // We keep only a first name for the header. Nothing about the student is stored
 // by us or sent anywhere else.
 
 import { onAuthStateChanged, signOut as firebaseSignOut, GoogleAuthProvider, signInWithPopup, type User } from "firebase/auth";
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 
 import { firstName } from "@/lib/auth-utils";
 import { firebaseAuth, firebaseReady } from "@/lib/firebase";
@@ -33,10 +33,43 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// Guest flag for this tab. useSyncExternalStore reads it only in the browser;
+// on the server (and during hydration) it is null, which shows "loading", so
+// the server and first browser render match.
+const GUEST_KEY = "cre:guest";
+let memoryGuest = false; // fallback when sessionStorage is blocked
+const guestListeners = new Set<() => void>();
+
+function readGuest(): boolean {
+  try {
+    return window.sessionStorage.getItem(GUEST_KEY) === "1" || memoryGuest;
+  } catch {
+    return memoryGuest;
+  }
+}
+
+function writeGuest(on: boolean) {
+  memoryGuest = on;
+  try {
+    if (on) window.sessionStorage.setItem(GUEST_KEY, "1");
+    else window.sessionStorage.removeItem(GUEST_KEY);
+  } catch {
+    // Storage blocked: the in-memory flag still works until a refresh.
+  }
+  guestListeners.forEach((listener) => listener());
+}
+
+function subscribeGuest(listener: () => void) {
+  guestListeners.add(listener);
+  return () => {
+    guestListeners.delete(listener);
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   // undefined = still waiting for Firebase's first answer; null = signed out.
   const [googleUser, setGoogleUser] = useState<User | null | undefined>(undefined);
-  const [guest, setGuest] = useState(false);
+  const guest = useSyncExternalStore<boolean | null>(subscribeGuest, readGuest, () => null);
 
   useEffect(() => {
     const auth = firebaseAuth();
@@ -50,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     status = googleUser === undefined ? "loading" : googleUser ? "signed-in" : "signed-out";
     if (googleUser) student = { name: firstName(googleUser.displayName), mode: "google" };
   } else {
-    status = guest ? "signed-in" : "signed-out";
+    status = guest === null ? "loading" : guest ? "signed-in" : "signed-out";
     if (guest) student = { name: "Guest", mode: "guest" };
   }
 
@@ -64,10 +97,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signInWithPopup(auth, new GoogleAuthProvider());
     },
     continueAsGuest() {
-      if (!firebaseReady) setGuest(true);
+      if (!firebaseReady) writeGuest(true);
     },
     async signOut() {
-      setGuest(false);
+      writeGuest(false);
       const auth = firebaseAuth();
       if (auth) await firebaseSignOut(auth);
     },

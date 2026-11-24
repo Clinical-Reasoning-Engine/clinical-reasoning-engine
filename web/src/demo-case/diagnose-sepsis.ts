@@ -1,17 +1,298 @@
 // Diagnose-mode version of the sepsis case.
 //
 // Real (from sepsis-case.json, built from the open-access MIMIC-IV demo):
-// age, sex and the first hour of vitals.
-// Written by the team: the chief complaint and the setting. The demo has no
-// clinical notes, so these are made up to fit the real stay's coded diagnoses
-// (septic shock, pneumonia, confusion). Educational simulation, not medical advice.
+// age, sex, the first hour of vitals, and the admission labs (WBC, sodium,
+// potassium, creatinine, lactate). The diagnosis comes from the real stay's
+// coded diagnoses (septic shock, pneumonia).
+//
+// Written by the team: the chief complaint, the setting, every history answer,
+// the results of tests that are not in the extract (cultures, X-ray, ...), the
+// alternative diagnoses and the teaching points. The demo has no clinical
+// notes, so these fill the gaps. They have not had a medical review.
+// Educational simulation, not medical advice.
 
-import type { DiagnoseCase } from "@/lib/diagnose/case-types";
+import type { DiagnoseCase, HistoryItem, TestItem } from "@/lib/diagnose/case-types";
 import type { CaseData } from "@/lib/sim";
 
 import caseJson from "./sepsis-case.json";
 
 const data = caseJson as unknown as CaseData;
+const lab = (name: string) => `${data.labs[name].value} ${data.labs[name].unit}`;
+
+const history: HistoryItem[] = [
+  {
+    id: "greeting",
+    category: "intro",
+    label: "Greeting",
+    terms: ["hello", "hi", "hey", "good morning", "good afternoon", "good evening", "how are you", "nice to meet"],
+    answer: "Hi, doctor… I don't feel well at all.",
+    speaker: "Patient",
+    key: false,
+  },
+  // History of present illness: OPQRST plus associated symptoms.
+  {
+    id: "onset",
+    category: "hpi",
+    label: "Onset",
+    terms: ["start*", "began", "begin", "onset", "first notice*", "how long has", "how long ago", "when did this", "when did it", "when did she", "when did you start"],
+    answer: "Two days ago she started coughing and said she felt hot. This morning she didn't know where she was.",
+    speaker: "Daughter",
+    key: true,
+    why: "The timeline (an acute illness over two days) points toward an infection rather than a slow, chronic problem.",
+  },
+  {
+    id: "provocation",
+    category: "hpi",
+    label: "Provoking / relieving",
+    terms: ["better", "worse", "helps", "anything help", "relieve*", "trigger*", "tylenol", "makes it", "make it"],
+    answer: "Nothing really helps. She took some Tylenol yesterday and the fever came down for a few hours.",
+    speaker: "Daughter",
+    key: false,
+  },
+  {
+    id: "quality",
+    category: "hpi",
+    label: "Quality (cough, sputum)",
+    terms: ["cough*", "phlegm", "sputum", "mucus", "productive"],
+    answer: "It's a wet cough… I'm bringing up thick yellow stuff.",
+    speaker: "Patient",
+    key: true,
+    why: "A productive cough with yellow sputum points to a lung source of infection, like pneumonia.",
+  },
+  {
+    id: "region",
+    category: "hpi",
+    label: "Region (chest pain)",
+    terms: ["chest pain", "pain*", "hurt*", "radiat*", "sore"],
+    answer: "My right side hurts when I cough or take a deep breath.",
+    speaker: "Patient",
+    key: false,
+  },
+  {
+    id: "severity",
+    category: "hpi",
+    label: "Severity",
+    terms: ["how bad", "severe", "severity", "scale", "out of 10", "out of ten", "rate it", "rate the"],
+    answer: "Maybe a 5 out of 10. Worse when I cough.",
+    speaker: "Patient",
+    key: false,
+  },
+  {
+    id: "timing",
+    category: "hpi",
+    label: "Timing",
+    terms: ["getting worse", "getting better", "constant", "comes and goes", "all the time", "timing", "progress*", "changed", "worsen*"],
+    answer: "It's been getting worse every day. The confusion only started this morning.",
+    speaker: "Daughter",
+    key: false,
+  },
+  {
+    id: "fever",
+    category: "hpi",
+    label: "Fever / chills",
+    terms: ["fever*", "chill*", "sweat*", "temperature", "shaking", "felt hot", "febrile"],
+    answer: "Yes, she's had fevers and shaking chills since yesterday.",
+    speaker: "Daughter",
+    key: true,
+    why: "Fever with rigors (shaking chills) is a sign of a significant infection.",
+  },
+  {
+    id: "breathing",
+    category: "hpi",
+    label: "Shortness of breath",
+    terms: ["breath*", "short", "winded", "dyspnea", "air"],
+    answer: "I can't… catch my breath. Even walking to the bathroom.",
+    speaker: "Patient",
+    key: true,
+    why: "Shortness of breath with a fast respiratory rate suggests the lungs are involved and the patient is getting sicker.",
+  },
+  {
+    id: "baseline",
+    category: "hpi",
+    label: "Mental status vs baseline",
+    terms: ["confus*", "baseline", "usually", "normal for", "like this before", "memory", "oriented", "alert", "dementia", "mental*"],
+    answer: "No, this isn't like her at all. She lives alone and does her own shopping.",
+    speaker: "Daughter",
+    key: true,
+    why: "New confusion in an older adult is a red flag: it can be a sign of organ dysfunction from a serious infection (sepsis).",
+  },
+  // Past medical history, medications, allergies.
+  {
+    id: "pmh",
+    category: "pmh",
+    label: "Medical conditions",
+    terms: ["medical history", "medical problems", "medical conditions", "condition*", "diagnos*", "health problems", "past history", "illness*", "hospitali*", "surger*"],
+    answer: "High blood pressure. No lung problems that we know of. She hasn't been in the hospital in years.",
+    speaker: "Daughter",
+    key: true,
+    why: "Past conditions change the differential and the risk; for example, chronic lung disease would make pneumonia more likely.",
+  },
+  {
+    id: "meds",
+    category: "pmh",
+    label: "Medications",
+    terms: ["medication*", "medicine*", "meds", "pill*", "prescri*", "take any", "taking any"],
+    answer: "A blood pressure pill every morning and a baby aspirin.",
+    speaker: "Daughter",
+    key: true,
+    why: "Medications matter: a blood pressure pill can make low blood pressure worse, and some drugs cause confusion.",
+  },
+  {
+    id: "allergies",
+    category: "pmh",
+    label: "Allergies",
+    terms: ["allerg*", "reaction to"],
+    answer: "Penicillin gave her a rash years ago.",
+    speaker: "Daughter",
+    key: true,
+    why: "A penicillin allergy changes which antibiotics are safe to use.",
+  },
+  {
+    id: "vaccines",
+    category: "pmh",
+    label: "Vaccines",
+    terms: ["vaccin*", "flu shot", "pneumonia shot", "immuniz*", "shots"],
+    answer: "I don't think she's had her flu shot this year.",
+    speaker: "Daughter",
+    key: false,
+  },
+  // Family history.
+  {
+    id: "family",
+    category: "family",
+    label: "Family history",
+    terms: ["family", "mother", "father", "mom", "dad", "parent*", "sibling*", "brother*", "sister*", "runs in", "hereditary", "genetic"],
+    answer: "Her mother had diabetes. Nobody in the family has had lung disease that I know of.",
+    speaker: "Daughter",
+    key: true,
+    why: "Family history completes the picture; here it's not very revealing, which is useful to know too.",
+  },
+  // Social history.
+  {
+    id: "smoking",
+    category: "social",
+    label: "Smoking",
+    terms: ["smok*", "cigar*", "tobacco", "vape", "vaping", "pack*"],
+    answer: "She smoked for about 20 years but quit a long time ago.",
+    speaker: "Daughter",
+    key: true,
+    why: "Smoking history raises the risk of lung infections and chronic lung disease.",
+  },
+  {
+    id: "alcohol",
+    category: "social",
+    label: "Alcohol",
+    terms: ["alcohol", "drink", "drinks", "beer", "wine", "liquor", "booze"],
+    answer: "A glass of wine on holidays, that's it.",
+    speaker: "Daughter",
+    key: false,
+  },
+  {
+    id: "drugs",
+    category: "social",
+    label: "Recreational drugs",
+    terms: ["recreational", "illicit", "street drugs", "cocaine", "marijuana", "weed", "cannabis", "drug use"],
+    answer: "No, never.",
+    speaker: "Daughter",
+    key: false,
+  },
+  {
+    id: "living",
+    category: "social",
+    label: "Living situation, sick contacts",
+    terms: ["live", "lives", "living", "lived", "home", "alone", "sick contact*", "anyone sick", "around anyone", "anyone around", "sick", "exposure*", "travel*", "nursing home"],
+    answer: "She lives alone in an apartment. Her grandson had a bad cold last week.",
+    speaker: "Daughter",
+    key: true,
+    why: "Living situation and sick contacts point to where the infection came from (community vs. hospital or nursing home).",
+  },
+  // Review of systems.
+  {
+    id: "intake",
+    category: "ros",
+    label: "Eating and drinking",
+    terms: ["eating and drinking", "eat", "eating", "appetite", "fluids", "drinking fluids", "drinking water", "water", "intake", "food"],
+    answer: "Barely anything since yesterday.",
+    speaker: "Daughter",
+    key: false,
+  },
+  {
+    id: "urinary",
+    category: "ros",
+    label: "Urinary",
+    terms: ["urin*", "pee*", "burning", "bladder", "bathroom"],
+    answer: "No burning when she pees, but she's going much less than usual.",
+    speaker: "Daughter",
+    key: true,
+    why: "Asking about urinary symptoms helps rule a urinary infection in or out as the source, and low urine output is a sign of poor perfusion.",
+  },
+  {
+    id: "gi",
+    category: "ros",
+    label: "GI",
+    terms: ["belly", "abdom*", "stomach", "nausea", "nauseous", "vomit*", "throw* up", "diarrhea", "stool*", "bowel*"],
+    answer: "No belly pain, no vomiting, no diarrhea.",
+    speaker: "Daughter",
+    key: false,
+  },
+  {
+    id: "neuro",
+    category: "ros",
+    label: "Neuro",
+    terms: ["headache*", "stiff neck", "neck", "weak*", "numb*", "speech", "face", "seizure*"],
+    answer: "No headache or stiff neck. She isn't weak on one side, just very tired.",
+    speaker: "Daughter",
+    key: false,
+  },
+  {
+    id: "cardiac",
+    category: "ros",
+    label: "Cardiac",
+    terms: ["palpitation*", "racing", "heart", "swelling", "swollen", "legs"],
+    answer: "No leg swelling. She says her heart feels like it's racing.",
+    speaker: "Daughter",
+    key: false,
+  },
+  {
+    id: "skin",
+    category: "ros",
+    label: "Skin",
+    terms: ["rash*", "skin", "wound*", "cut*"],
+    answer: "No new rashes or wounds.",
+    speaker: "Daughter",
+    key: false,
+  },
+];
+
+const tests: TestItem[] = [
+  { id: "cbc", label: "CBC", detail: "Complete blood count", result: `WBC ${lab("wbc")} (high)`, source: "mimic-demo" },
+  {
+    id: "bmp",
+    label: "Basic metabolic panel",
+    detail: "Electrolytes and kidney function",
+    result: `Sodium ${lab("sodium")} (low) · Potassium ${lab("potassium")} · Creatinine ${lab("creatinine")}`,
+    source: "mimic-demo",
+  },
+  { id: "lactate", label: "Lactate", detail: "Marker of poor tissue perfusion", result: `Lactate ${lab("lactate")}`, source: "mimic-demo" },
+  {
+    id: "blood-cultures",
+    label: "Blood cultures ×2",
+    detail: "Identify the organism",
+    result: "Drawn from two sites. Results take 24–48 hours.",
+    source: "team",
+  },
+  {
+    id: "cxr",
+    label: "Chest X-ray",
+    detail: "Portable",
+    result: "Patchy opacity in the right lower lobe.",
+    source: "team",
+  },
+  { id: "ua", label: "Urinalysis", detail: "Look for a urinary source", result: "No signs of infection.", source: "team" },
+  { id: "troponin", label: "Troponin", detail: "Heart muscle injury", result: "Within normal limits.", source: "team" },
+  { id: "ct-head", label: "CT head", detail: "Non-contrast", result: "No acute findings.", source: "team" },
+  { id: "d-dimer", label: "D-dimer", detail: "Screen for blood clots", result: "Mildly elevated (non-specific).", source: "team" },
+];
 
 export const sepsisDiagnoseCase: DiagnoseCase = {
   id: "sepsis",
@@ -29,5 +310,52 @@ export const sepsisDiagnoseCase: DiagnoseCase = {
     values: { ...data.start },
     note: "First charted hour of the real ICU stay. The extract has mean arterial pressure, not systolic/diastolic.",
     source: "mimic-demo",
+  },
+  history,
+  tests,
+  diagnoses: [
+    { id: "sepsis-pneumonia", label: "Sepsis / septic shock from pneumonia", synonyms: ["septic shock", "pneumosepsis", "sepsis from pneumonia", "pneumonia with sepsis", "sepsis due to pneumonia", "septic shock pneumonia"] },
+    { id: "pneumonia", label: "Community-acquired pneumonia (no sepsis)", synonyms: ["pneumonia", "cap", "lobar pneumonia", "community acquired pneumonia"] },
+    { id: "sepsis-unknown", label: "Sepsis, source unclear", synonyms: ["sepsis", "septicemia", "bacteremia"] },
+    { id: "urosepsis", label: "Urosepsis (urinary tract source)", synonyms: ["uti", "urinary tract infection", "pyelonephritis", "urosepsis"] },
+    { id: "aspiration", label: "Aspiration pneumonia", synonyms: ["aspiration"] },
+    { id: "influenza", label: "Influenza", synonyms: ["flu", "influenza"] },
+    { id: "covid", label: "COVID-19", synonyms: ["covid", "coronavirus", "sars cov 2"] },
+    { id: "pe", label: "Pulmonary embolism", synonyms: ["pe", "pulmonary embolism", "blood clot in lung"] },
+    { id: "dehydration", label: "Hypovolemia / dehydration", synonyms: ["dehydration", "hypovolemia", "hypovolemic shock"] },
+    { id: "chf", label: "Heart failure exacerbation", synonyms: ["chf", "heart failure", "congestive heart failure"] },
+    { id: "mi", label: "Myocardial infarction", synonyms: ["mi", "heart attack", "acs", "acute coronary syndrome"] },
+    { id: "stroke", label: "Stroke", synonyms: ["stroke", "cva", "tia"] },
+    { id: "meningitis", label: "Meningitis", synonyms: ["meningitis"] },
+    { id: "copd", label: "COPD exacerbation", synonyms: ["copd"] },
+  ],
+  answerKey: {
+    diagnosisId: "sepsis-pneumonia",
+    diagnosisSource: "mimic-demo",
+    partialIds: ["pneumonia", "sepsis-unknown"],
+    alternativeIds: ["urosepsis", "aspiration", "influenza", "covid", "pe", "dehydration", "meningitis"],
+    supportingFindings: [
+      { label: "Fever", terms: ["fever*", "febrile", "temp*", "101*", "chill*", "rigor*"] },
+      { label: "Productive cough", terms: ["cough*", "sputum", "phlegm"] },
+      { label: "New confusion", terms: ["confus*", "altered", "mental status", "ams", "delirium", "disorient*"] },
+      { label: "Low blood pressure (MAP 58)", terms: ["hypotens*", "low blood pressure", "low bp", "map", "58"] },
+      { label: "Fast heart rate", terms: ["tachycard*", "heart rate", "hr", "117"] },
+      { label: "Fast breathing", terms: ["tachypn*", "respiratory rate", "rr", "27", "short of breath", "shortness of breath", "dyspnea"] },
+      { label: "High white count", terms: ["wbc", "white count", "white blood", "leukocyt*", "22*"] },
+      { label: "Chest X-ray opacity", terms: ["x ray", "xray", "cxr", "opacit*", "infiltrat*", "consolidat*", "right lower lobe", "rll"] },
+    ],
+    plan: [
+      { testId: "cbc", source: "mimic-demo", why: "Checks the white count; it was 22.4, a strong sign of infection." },
+      { testId: "bmp", source: "mimic-demo", why: "Checks kidney function and electrolytes; sodium was low." },
+      { testId: "lactate", source: "mimic-demo", why: "Lactate measures how well tissues are perfused; it helps judge how sick the patient is." },
+      { testId: "blood-cultures", source: "team", why: "Cultures, drawn before antibiotics, can identify the organism." },
+      { testId: "cxr", source: "team", why: "The chest X-ray confirms pneumonia as the source." },
+    ],
+    teachingPoints: [
+      "Sepsis is a dysregulated response to infection. Vessels dilate and leak, so blood pressure falls even though the heart is pumping hard; that is why the heart rate is high and the MAP is low.",
+      "In an older adult, new confusion can be the first sign of sepsis. Always compare with their baseline.",
+      "A productive cough, fever, fast breathing and a high white count point to pneumonia as the source; the chest X-ray confirms it.",
+      "Draw blood cultures before antibiotics, and check a lactate to judge how severe the illness is.",
+    ],
   },
 };

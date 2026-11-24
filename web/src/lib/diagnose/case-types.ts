@@ -16,6 +16,58 @@ export const SOURCE_LABELS: Record<Source, string> = {
 
 export type VitalKey = "hr" | "map" | "rr" | "spo2" | "temp_f";
 
+/** History sections tracked on the Work-up page (MVP-4). */
+export type HistoryCategory = "hpi" | "pmh" | "family" | "social" | "ros";
+
+/** One thing the patient (or family) can tell the student. */
+export type HistoryItem = {
+  id: string;
+  /** "intro" items (greetings) are answered but not tracked or graded. */
+  category: HistoryCategory | "intro";
+  /** Short label for the tracker, e.g. "Onset" or "Allergies". */
+  label: string;
+  /**
+   * Words or phrases that mean the student asked about this. Terms match whole
+   * words; a trailing * matches the start of a word ("smok*" matches "smoker").
+   */
+  terms: string[];
+  answer: string;
+  speaker: "Patient" | "Daughter";
+  /** Key items count toward the history score, like an OSCE checklist. */
+  key: boolean;
+  /** Why it matters, shown in Feedback if the student missed it. */
+  why?: string;
+};
+
+/** A test the student can order. */
+export type TestItem = {
+  id: string;
+  label: string;
+  detail: string;
+  /** What comes back, shown when the test is ordered. */
+  result: string;
+  source: Source;
+};
+
+/** A diagnosis the student can choose for the differential. */
+export type DiagnosisOption = { id: string; label: string; synonyms: string[] };
+
+/** What the rule-based grader compares the student's submission against. */
+export type AnswerKey = {
+  /** The real diagnosis (#1 in the key). */
+  diagnosisId: string;
+  diagnosisSource: Source;
+  /** Close but incomplete answers for #1 (e.g. "pneumonia" without the sepsis). Half credit. */
+  partialIds: string[];
+  /** Reasonable alternatives that earn credit in slots #2 and #3. */
+  alternativeIds: string[];
+  /** Findings that support #1; each one mentioned earns credit. */
+  supportingFindings: { label: string; terms: string[] }[];
+  /** Tests in the key's work-up plan, each with where it came from. */
+  plan: { testId: string; source: Source; why: string }[];
+  teachingPoints: string[];
+};
+
 export type DiagnoseCase = {
   id: string;
   /** Short title shown on the Patient page, e.g. "Cough, fever and confusion". */
@@ -27,4 +79,8 @@ export type DiagnoseCase = {
   setting: { text: string; source: Source };
   /** First set of vitals the student sees. */
   openingVitals: { values: Record<VitalKey, number>; note: string; source: Source };
+  history: HistoryItem[];
+  tests: TestItem[];
+  diagnoses: DiagnosisOption[];
+  answerKey: AnswerKey;
 };

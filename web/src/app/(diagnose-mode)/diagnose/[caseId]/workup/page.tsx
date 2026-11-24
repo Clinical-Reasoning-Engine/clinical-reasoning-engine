@@ -1,14 +1,16 @@
-import { StepPlaceholder } from "@/components/diagnose/step-placeholder";
-import { stepHref } from "@/lib/diagnose/steps";
+// Step 2 of the case: take a history, order tests, submit differentials and a plan.
+// This server page looks up the case and hands only what the browser needs to
+// the client component (not the answer key, and not the big trajectory tree).
+
+import { notFound } from "next/navigation";
+
+import { getDiagnoseCase } from "@/lib/diagnose/cases";
+
+import { Workup } from "./workup";
 
 export default async function DiagnoseWorkupPage({ params }: PageProps<"/diagnose/[caseId]/workup">) {
   const { caseId } = await params;
-  return (
-    <StepPlaceholder
-      title="Take a history, order tests, submit"
-      description="Ask the patient questions in your own words, order tests, then commit to 3 ranked differentials and a work-up plan."
-      nextHref={stepHref(caseId, "feedback")}
-      nextLabel="Submit (placeholder)"
-    />
-  );
+  const c = getDiagnoseCase(caseId);
+  if (!c) notFound();
+  return <Workup caseId={caseId} title={c.title} history={c.history} tests={c.tests} diagnoses={c.diagnoses} />;
 }
